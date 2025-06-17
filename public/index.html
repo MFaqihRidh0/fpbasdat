@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Login Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .login-container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+    h1 { margin-top: 0; }
+    input { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    button { width: 100%; padding: 10px; background-color: #1877f2; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    button:hover { background-color: #166fe5; }
+    #message { margin-top: 15px; font-weight: bold; color: red; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Login Admin</h1>
+    <input id="user" placeholder="Username"/><br/>
+    <input id="pass" type="password" placeholder="Password"/><br/>
+    <button onclick="login()">Login</button>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    function login() {
+      const messageDiv = document.getElementById('message');
+      messageDiv.innerText = ''; // Kosongkan pesan error sebelumnya
+
+      fetch('/api/login', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          username: document.getElementById('user').value,
+          password: document.getElementById('pass').value
+        })
+      })
+      .then(r => {
+        if (!r.ok) {
+          // Jika status HTTP bukan 2xx (misal 401 Unauthorized)
+          throw new Error('Login gagal, periksa username dan password.');
+        }
+        return r.json();
+      })
+      .then(j => {
+        if (j.success) {
+          // [FIX] Menggunakan 'admin-token' agar konsisten dengan dashboard.html
+          localStorage.setItem('admin-token', j.token); 
+          window.location.href = 'dashboard.html'; // Menggunakan window.location.href lebih umum
+        } else {
+          // Seharusnya blok ini tidak akan tereksekusi jika response.ok dicek di atas,
+          // tapi sebagai pengaman tambahan.
+          messageDiv.innerText = 'Login gagal.';
+        }
+      })
+      .catch(err => {
+        // Menangkap error dari fetch atau dari throw new Error
+        messageDiv.innerText = err.message;
+      });
+    }
+  </script>
+</body>
+</html>
